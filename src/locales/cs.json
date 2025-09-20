@@ -1,0 +1,98 @@
+{
+  "dashboard": {
+    "myLessons": "Moje Lekce",
+    "createLesson": "Vytvořit Lekci",
+    "noLessonsYet": "Zatím jste nevytvořili žádné lekce.",
+    "availableLessons": "Dostupné Lekce",
+    "noAvailableLessons": "Momentálně nejsou dostupné žádné lekce."
+  },
+  "lesson": {
+    "back": "Zpět",
+    "videoLesson": "Video Lekce",
+    "hide": "Skrýt",
+    "show": "Zobrazit",
+    "videoNotAvailable": "Video není k dispozici.",
+    "studyText": "Studijní text",
+    "lessonEditor": "Editor Lekce",
+    "studentInteractions": "Interakce Studentů",
+    "saving": "Ukládám...",
+    "saveSuccess": "Materiály byly úspěšně uloženy!",
+    "saveMaterials": "Uložit materiály",
+    "createSuccess": "Lekce byla úspěšně vytvořena!"
+  },
+  "chat": {
+    "welcome": "Vítejte! Jsem AI Sensei pro lekci \"{{lessonTitle}}\". Ptejte se mě na cokoliv.",
+    "online": "online",
+    "startQuiz": "Spustit kvíz",
+    "sending": "Odesílám...",
+    "requestHelp": "Požádat o pomoc profesora",
+    "writeMessage": "Napsat zprávu...",
+    "messageSentSuccess": "Vaše zpráva byla úspěšně odeslána profesoru. Brzy se vám ozve.",
+    "messageSentError": "Odeslání selhalo. Zkuste to prosím později.",
+    "noQuizReady": "Pro tuto lekci není připraven žádný kvíz."
+  },
+  "quiz": {
+    "pleaseAnswerAll": "Prosím, odpovězte na všechny otázky.",
+    "knowledgeTest": "Test znalostí",
+    "evaluate": "Vyhodnotit",
+    "score": "Skóre: {{score}} / {{total}}"
+  },
+  "lessonEditor": {
+    "sourceFiles": "1. Zdrojové soubory",
+    "uploadFile": "Nahrát soubor",
+    "uploading": "Nahrávám...",
+    "unsupportedFilesWarning": "Upozornění: Následující soubory mají nepodporovaný formát a budou při generování lekce ignorovány:",
+    "generateAndEdit": "2. Vygenerovat & Upravit Lekci",
+    "generateLessonText": "✨ Vygenerovat text lekce",
+    "generating": "Generuji...",
+    "finalLook": "3. Finální podoba lekce",
+    "studentTextViewPlaceholder": "Zde se zobrazí text pro studenta...",
+    "refineWithAI": "Vylepšit text s AI",
+    "refineInstruction": "Zadejte pokyn pro úpravu textu vlevo.",
+    "refinePlaceholder": "Např. 'Zjednoduš to' nebo 'Přidej příklad...'",
+    "refine": "Upravit",
+    "additionalMaterials": "4. Doplňkové materiály",
+    "videoLabel": "Video k Lekci (YouTube URL)",
+    "personaLabel": "Chování AI Asistenta (Prompt)",
+    "personaPlaceholder": "Např. 'Jsi vtipný asistent, který používá analogie.'",
+    "quizPrep": "5. Příprava Kvízu",
+    "questionCount": "Počet otázek",
+    "specificInstructions": "Specifické pokyny pro AI",
+    "instructionsPlaceholder": "Např. Zaměř se na definice...",
+    "generateAndSaveQuiz": "Vygenerovat a Uložit Kvíz",
+    "generatingQuiz": "Generuji kvíz...",
+    "quizPreview": "Náhled připraveného kvízu:",
+    "generateTextFirst": "Nejprve vygenerujte studijní text lekce.",
+    "quizGeneratedSuccess": "Kvíz byl úspěšně vygenerován a uložen!",
+    "quizGeneratedError": "Nepodařilo se vygenerovat kvíz."
+  },
+  "studentInteractions": {
+    "students": "Studenti",
+    "noInteractionsYet": "Zatím žádné interakce.",
+    "loadingInteractions": "Načítání interakcí...",
+    "communication": "Komunikace",
+    "aiAnalysis": "AI Analýza",
+    "selectStudentPrompt": "Vyberte studenta ze seznamu vlevo pro zobrazení jeho interakcí a analýz.",
+    "quizOverview": "Přehled Kvízů",
+    "quizResults": "Výsledky Kvízu #{{index}}",
+    "noQuizTaken": "Student zatím nevyplnil žádný kvíz.",
+    "summaryAnalysis": "Souhrnná Analýza a Doporučení",
+    "generateSummary": "Generovat souhrnnou AI analýzu",
+    "generatingSummary": "Generuji souhrn...",
+    "strongPoints": "Silné stránky",
+    "areasForImprovement": "Oblasti ke zlepšení",
+    "recommendationsForStudent": "Doporučení pro Studenta",
+    "recommendationsForProfessor": "Doporučení pro Profesora"
+  },
+  "modal": {
+    "newLesson": "Nová Lekce",
+    "lessonTitle": "Název lekce",
+    "lessonSubtitle": "Podtitulek",
+    "cancel": "Zrušit",
+    "create": "Vytvořit"
+  },
+  "error": {
+    "createLessonError": "Nepodařilo se vytvořit lekci. Zkontrolujte prosím bezpečnostní pravidla databáze a zkuste to znovu.",
+    "telegramNotConfigured": "Chyba: Telegram není správně nakonfigurován. Kontaktujte administrátora."
+  }
+}

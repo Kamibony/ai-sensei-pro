@@ -1,45 +1,30 @@
-﻿import React, { useState } from 'react';
+﻿import React from 'react';
+import { Toaster } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth.js';
 import Header from './components/Header.jsx';
-import AuthPage from './components/AuthPage.jsx';
-import ProfessorDashboard from './components/ProfessorDashboard.jsx';
-import ProfessorLessonView from './components/ProfessorLessonView.jsx';
-import StudentDashboard from './components/StudentDashboard.jsx';
-import StudentLessonView from './components/StudentLessonView.jsx';
-import FullScreenLoader from './components/FullScreenLoader.jsx';
+import AppRoutes from './components/AppRoutes.jsx';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function App() {
-    const { user, userData, loading } = useAuth();
-    const [view, setView] = useState('dashboard');
-    const [selectedLessonId, setSelectedLessonId] = useState(null);
+    const { user, userData } = useAuth();
+    const navigate = useNavigate();
 
-    const handleSelectLesson = (lessonId) => {
-        setSelectedLessonId(lessonId);
-        setView('lesson');
+    const handleNavigateToDashboard = () => {
+        if (userData?.role === 'professor') {
+            navigate('/professor/dashboard');
+        } else {
+            navigate('/student/dashboard');
+        }
     };
-
-    const navigateToDashboard = () => {
-        setView('dashboard');
-        setSelectedLessonId(null);
-    }
-
-    if (loading) return <FullScreenLoader />;
 
     return (
         <div className="min-h-screen bg-gray-100 font-sans">
-            {!user ? (
-                <AuthPage />
-            ) : (
-                <>
-                    <Header userEmail={user.email} userData={userData} onNavigateToDashboard={navigateToDashboard} />
-                    <main className="p-4 md:p-8">
-                        {userData?.role === 'professor' && view === 'dashboard' && <ProfessorDashboard onSelectLesson={handleSelectLesson} />}
-                        {userData?.role === 'professor' && view === 'lesson' && <ProfessorLessonView lessonId={selectedLessonId} onBack={navigateToDashboard} />}
-                        {userData?.role === 'student' && view === 'dashboard' && <StudentDashboard onSelectLesson={handleSelectLesson} />}
-                        {userData?.role === 'student' && view === 'lesson' && <StudentLessonView lessonId={selectedLessonId} onBack={navigateToDashboard} />}
-                    </main>
-                </>
-            )}
+            <Toaster position="top-center" reverseOrder={false} />
+            {user && <Header userEmail={user.email} userData={userData} onNavigateToDashboard={handleNavigateToDashboard} />}
+            <main className="p-4 md:p-8">
+                <AppRoutes />
+            </main>
         </div>
     );
 }

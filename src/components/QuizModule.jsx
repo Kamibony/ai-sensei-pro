@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { serverTimestamp } from 'firebase/firestore';
 
 const QuizModule = ({ quizData, onQuizSubmit }) => {
@@ -11,7 +12,7 @@ const QuizModule = ({ quizData, onQuizSubmit }) => {
 
     const handleSubmit = () => {
         if (Object.keys(answers).length !== quizData.length) {
-            alert("ProsÃ­m, odpovÄ›zte na vÅ¡echny otÃ¡zky.");
+            toast.error("Prosím, odpovězte na všechny otázky.");
             return;
         }
         setSubmitted(true);
@@ -25,7 +26,7 @@ const QuizModule = ({ quizData, onQuizSubmit }) => {
 
     return (
         <div className="mt-2 bg-white/80 p-4 rounded-lg shadow-inner">
-            <h4 className="font-bold text-center mb-4">Test znalostÃ­</h4>
+            <h4 className="font-bold text-center mb-4">Test znalostí</h4>
             {quizData.map((q, qIndex) => (
                 <div key={qIndex} className="mb-6">
                     <p className="font-semibold mb-2 text-sm">{qIndex + 1}. {q.question}</p>
@@ -41,7 +42,7 @@ const QuizModule = ({ quizData, onQuizSubmit }) => {
                             } else if (answers[qIndex] === oIndex) {
                                 optionStyle = 'bg-blue-100 border-blue-400';
                             }
-                            
+
                             return (
                                 <label key={oIndex} className={`block p-2 text-sm rounded-lg border cursor-pointer ${optionStyle}`}>
                                     <input type="radio" name={`q${qIndex}`} onChange={() => handleAnswerChange(qIndex, oIndex)} className="hidden" disabled={submitted}/>
@@ -53,7 +54,7 @@ const QuizModule = ({ quizData, onQuizSubmit }) => {
                 </div>
             ))}
             {!submitted && <button onClick={handleSubmit} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg">Vyhodnotit</button>}
-            {submitted && <div className="text-center p-4 bg-blue-100 rounded-lg"><p className="text-lg font-bold">SkÃ³re: {score} / {quizData.length}</p></div>}
+            {submitted && <div className="text-center p-4 bg-blue-100 rounded-lg"><p className="text-lg font-bold">Skóre: {score} / {quizData.length}</p></div>}
         </div>
     );
 }
