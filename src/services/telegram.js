@@ -1,15 +1,17 @@
+import toast from 'react-hot-toast';
+
 const TELEGRAM_API_TOKEN = import.meta.env.VITE_TELEGRAM_API_TOKEN;
 const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
-const BASE_URL = https://api.telegram.org/bot\;
+const BASE_URL = `https://api.telegram.org/bot${TELEGRAM_API_TOKEN}`;
 
 export const sendTelegramMessage = async (message) => {
     if (!TELEGRAM_API_TOKEN || !CHAT_ID) {
         console.error("Telegram API Token or Chat ID is not configured in .env file.");
-        alert("Chyba: Telegram není správně nakonfigurován. Kontaktujte administrátora.");
+        toast.error("Chyba: Telegram není správně nakonfigurován. Kontaktujte administrátora.");
         return { ok: false, description: "Telegram not configured." };
     }
 
-    const url = \/sendMessage;
+    const url = `${BASE_URL}/sendMessage`;
     const payload = {
         chat_id: CHAT_ID,
         text: message,

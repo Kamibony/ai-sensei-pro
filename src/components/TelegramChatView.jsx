@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { doc, onSnapshot, updateDoc, arrayUnion, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config.js';
 import { callGeminiAPI } from '../services/gemini.js';
@@ -16,7 +17,7 @@ const TelegramChatView = ({ lesson, lessonId }) => {
         const chatDocRef = doc(db, 'temata', lessonId, 'chats', auth.currentUser.uid);
         const unsubscribe = onSnapshot(chatDocRef, (docSnap) => {
             let initialMessages = [
-                { type: 'text', text: Vítejte! Jsem AI Sensei pro lekci "\". Ptejte se mě na cokoliv., sender: 'ai' },
+                { type: 'text', text: `Vítejte! Jsem AI Sensei pro lekci "${lesson.title}". Ptejte se mě na cokoliv.`, sender: 'ai' },
             ];
             if (lesson.preparedQuiz && lesson.preparedQuiz.length > 0) {
                 initialMessages.push({ type: 'quiz_prompt', sender: 'ai' });
@@ -37,7 +38,7 @@ const TelegramChatView = ({ lesson, lessonId }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
     useEffect(scrollToBottom, [messages]);
-    
+
     const saveQuizResult = async (quizResult) => {
         if (auth.currentUser) {
             const { uid, email } = auth.currentUser;
@@ -58,13 +59,13 @@ const TelegramChatView = ({ lesson, lessonId }) => {
     const handleSend = async (e) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
-        
+
         const userMessage = { text: input, sender: 'student', timestamp: serverTimestamp() };
         const chatDocRef = doc(db, 'temata', lessonId, 'chats', auth.currentUser.uid);
-        
+
         const docSnap = await getDoc(chatDocRef);
         if (!docSnap.exists()) {
-            await setDoc(chatDocRef, { 
+            await setDoc(chatDocRef, {
                 studentEmail: auth.currentUser.email,
                 messages: [userMessage],
                 quizzes: []
@@ -72,11 +73,11 @@ const TelegramChatView = ({ lesson, lessonId }) => {
         } else {
             await updateDoc(chatDocRef, { messages: arrayUnion(userMessage) });
         }
-        
+
         setInput('');
         setIsLoading(true);
-        
-        const systemPrompt = Jste expert a asistent. Odpovídejte pouze na základě poskytnutého kontextu. \ Kontext: \n\n\;
+
+        const systemPrompt = `Jste expert a asistent. Odpovídejte pouze na základě poskytnutého kontextu. Kontext:\n\n${lesson.studentText}`;
         try {
             const aiText = await callGeminiAPI(input, null, systemPrompt);
             const aiMessage = { text: aiText, sender: 'ai', timestamp: serverTimestamp() };
@@ -90,28 +91,28 @@ const TelegramChatView = ({ lesson, lessonId }) => {
             setIsLoading(false);
         }
     };
-    
+
     const handleContactProfessor = async () => {
         setIsSendingToProfessor(true);
         const chatHistory = messages
             .filter(msg => msg.type !== 'quiz_prompt' && msg.type !== 'quiz_module')
             .map(msg => {
-                if (msg.sender === 'student') return Student: \;
-                if (msg.sender === 'ai') return AI: \;
-                if (msg.sender === 'professor') return Profesor: \;
-                return \;
+                if (msg.sender === 'student') return `Student: ${msg.text}`;
+                if (msg.sender === 'ai') return `AI: ${msg.text}`;
+                if (msg.sender === 'professor') return `Profesor: ${msg.text}`;
+                return msg.text;
             }).join('\n');
 
         const studentEmail = auth.currentUser?.email || 'Neznámý student';
-        
-        const telegramText = *Nová žádost o pomoc od studenta!*\n\n*Lekce:* \\n*Student:* \\n\n*Průběh konverzace:*\n\\\\n\\n\\\`;
+
+        const telegramText = `*Nová žádost o pomoc od studenta!*\n\n*Lekce:* ${lesson.title}\n*Student:* ${studentEmail}\n\n*Průběh konverzace:*\n\n${chatHistory}`;
 
         const result = await sendTelegramMessage(telegramText);
 
         if(result.ok) {
-            alert('Vaše zpráva byla úspěšně odeslána profesoru. Brzy se vám ozve.');
+            toast.success('Vaše zpráva byla úspěšně odeslána profesoru. Brzy se vám ozve.');
         } else {
-            alert(Odeslání selhalo. Zkuste to prosím později.);
+            toast.error('Odeslání selhalo. Zkuste to prosím později.');
         }
         setIsSendingToProfessor(false);
     };
@@ -121,7 +122,7 @@ const TelegramChatView = ({ lesson, lessonId }) => {
         if (lesson.preparedQuiz && lesson.preparedQuiz.length > 0) {
             setMessages(prev => prev.filter(m => m.type !== 'quiz_prompt').concat({type: 'quiz_module', quizData: lesson.preparedQuiz, sender: 'ai'}));
         } else {
-            alert("Pro tuto lekci není připraven žádný kvíz.");
+            toast.error("Pro tuto lekci není připraven žádný kvíz.");
         }
     };
 
@@ -137,8 +138,11 @@ const TelegramChatView = ({ lesson, lessonId }) => {
             </div>
             <div className="flex-grow p-4 overflow-y-auto">
                 {displayableMessages.map((msg, index) => (
-                    <div key={index} className={lex mb-3 \}>
-                        <div className={ounded-xl px-3 py-2 max-w-[85%] whitespace-pre-wrap \}>
+                    <div key={index} className={`flex mb-3 ${msg.sender === 'student' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`rounded-xl px-3 py-2 max-w-[85%] whitespace-pre-wrap ${
+                            msg.sender === 'student' ? 'bg-[#e1ffc7]' :
+                            msg.sender === 'professor' ? 'bg-blue-200' : 'bg-white'
+                        }`}>
                            {msg.text}
                         </div>
                     </div>
@@ -161,8 +165,8 @@ const TelegramChatView = ({ lesson, lessonId }) => {
                 <div ref={messagesEndRef} />
             </div>
             <div className="p-2 border-t bg-white/50 backdrop-blur-sm">
-                <button 
-                    onClick={handleContactProfessor} 
+                <button
+                    onClick={handleContactProfessor}
                     disabled={isSendingToProfessor || messages.length <= 2}
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed mb-2"
                 >

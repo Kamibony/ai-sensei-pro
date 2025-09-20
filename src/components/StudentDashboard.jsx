@@ -1,8 +1,12 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 
-const StudentDashboard = ({ onSelectLesson }) => {
+const StudentDashboard = () => {
+    const { t } = useTranslation();
+    const navigate = useNavigate();
     const [lessons, setLessons] = useState([]);
 
     useEffect(() => {
@@ -17,11 +21,11 @@ const StudentDashboard = ({ onSelectLesson }) => {
 
     return (
         <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-gray-700 mb-6">DostupnÃ© Lekce</h2>
+            <h2 className="text-3xl font-bold text-gray-700 mb-6">{t('dashboard.availableLessons')}</h2>
             {lessons.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {lessons.map((lekce) => (
-                        <div key={lekce.id} onClick={() => onSelectLesson(lekce.id)} className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <div key={lekce.id} onClick={() => navigate(`/student/lesson/${lekce.id}`)} className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all">
                             <h3 className="text-xl font-bold">{lekce.title}</h3>
                             <p className="text-gray-600 mt-2">{lekce.subtitle}</p>
                         </div>
@@ -29,7 +33,7 @@ const StudentDashboard = ({ onSelectLesson }) => {
                 </div>
             ) : (
                 <div className="text-center py-16 bg-white rounded-lg shadow-md">
-                    <p>MomentÃ¡lnÄ› nejsou dostupnÃ© Å¾Ã¡dnÃ© lekce.</p>
+                    <p>{t('dashboard.noAvailableLessons')}</p>
                 </div>
             )}
         </div>

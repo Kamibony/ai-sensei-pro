@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 import FullScreenLoader from './FullScreenLoader.jsx';
 import TelegramChatView from './TelegramChatView.jsx';
 
-const StudentLessonView = ({ lessonId, onBack }) => {
+const StudentLessonView = () => {
+    const { lessonId } = useParams();
+    const navigate = useNavigate();
     const [lesson, setLesson] = useState(null);
     const [showVideo, setShowVideo] = useState(false);
     const [showText, setShowText] = useState(false);
@@ -25,7 +28,7 @@ const StudentLessonView = ({ lessonId, onBack }) => {
         } else if (url.includes('watch?v=')) {
             videoId = url.split('watch?v=')[1].split('&')[0];
         }
-        return videoId ? https://www.youtube.com/embed/\ : null;
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
     }
 
     if (!lesson) return <FullScreenLoader />;
@@ -34,10 +37,10 @@ const StudentLessonView = ({ lessonId, onBack }) => {
 
     return (
         <div className="container mx-auto">
-            <button onClick={onBack} className="mb-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">&larr; Zpět</button>
+            <button onClick={() => navigate('/student/dashboard')} className="mb-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">&larr; Zpět</button>
             <h2 className="text-3xl font-bold text-gray-800 mb-2">{lesson.title}</h2>
             <p className="text-gray-600 mb-8 italic">{lesson.subtitle}</p>
-            
+
             <div className="flex flex-col lg:flex-row gap-8">
                 <div className="w-full lg:w-2/3 space-y-8">
                     <div className="bg-white p-6 rounded-xl shadow-lg">
@@ -67,7 +70,7 @@ const StudentLessonView = ({ lessonId, onBack }) => {
                 <div className="w-full lg:w-1/3">
                      <div className="lg:sticky top-8">
                          <div className="w-full max-w-lg mx-auto bg-black rounded-[40px] p-2 shadow-2xl border-4 border-gray-800">
-                             <div className="bg-white rounded-[32px] h-[85vh] flex flex-col overflow-hidden" style={{backgroundImage: url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg'), backgroundSize: 'cover'}}>
+                             <div className="bg-white rounded-[32px] h-[85vh] flex flex-col overflow-hidden" style={{backgroundImage: "url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')", backgroundSize: 'cover'}}>
                                 {lesson && <TelegramChatView lesson={lesson} lessonId={lessonId} />}
                             </div>
                         </div>
