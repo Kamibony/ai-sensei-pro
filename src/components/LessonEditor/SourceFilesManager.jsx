@@ -3,13 +3,13 @@ import toast from 'react-hot-toast';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { storage } from '../../firebase/config.js';
 
-const SourceFilesManager = ({ lessonId, onFilesChange }) => {
+const SourceFilesManager = ({ lessonId }) => {
     const [sourceFiles, setSourceFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
-    const [fileError, setFileError] = useState('');
     const fileInputRef = useRef(null);
 
     const fetchFiles = useCallback(async () => {
+        if (!lessonId) return;
         try {
             const filesRef = ref(storage, `sources/${lessonId}`);
             const res = await listAll(filesRef);
@@ -18,19 +18,18 @@ const SourceFilesManager = ({ lessonId, onFilesChange }) => {
                 url: await getDownloadURL(itemRef)
             })));
             setSourceFiles(files);
-            onFilesChange(files);
         } catch (error) {
-            setFileError(`Nepodařilo se načíst soubory.`);
+            console.error("Nepodařilo se načíst soubory:", error);
         }
-    }, [lessonId, onFilesChange]);
+    }, [lessonId]);
 
     useEffect(() => {
         fetchFiles();
-    }, [fetchFiles]);
+    }, [fetchFiles, lessonId]);
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
-        if (!file) return;
+        if (!file || !lessonId) return;
         setUploading(true);
         try {
             const storageRef = ref(storage, `sources/${lessonId}/${file.name}`);
@@ -38,40 +37,33 @@ const SourceFilesManager = ({ lessonId, onFilesChange }) => {
             toast.success("Soubor byl úspěšně nahrán!");
             await fetchFiles();
         } catch (error) {
-            console.error("Firebase Storage upload error:", error);
-            setFileError('Nahrávání selhalo. Zkontrolujte konzoli (F12) pro detaily.');
+            toast.error('Nahrávání selhalo.');
         } finally {
             setUploading(false);
-            if(fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
+            if(fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
     const handleDeleteFile = async (fileName) => {
-        if (!window.confirm(`Opravdu si přejete smazat soubor "${fileName}"?`)) {
-            return;
-        }
+        if (!window.confirm(`Opravdu si přejete smazat soubor "${fileName}"?`)) return;
         try {
             const fileRef = ref(storage, `sources/${lessonId}/${fileName}`);
             await deleteObject(fileRef);
             toast.success(`Soubor "${fileName}" byl smazán.`);
             fetchFiles();
         } catch (error) {
-            console.error("Error deleting file:", error);
-            setFileError("Soubor se nepodařilo smazat.");
+            toast.error("Soubor se nepodařilo smazat.");
         }
     };
-
-    const unsupportedFiles = sourceFiles.filter(file => !file.name.endsWith('.txt') && !file.name.endsWith('.md'));
-
+    
     return (
         <div>
-            <h3 className="text-xl font-semibold mb-2">1. Zdrojové soubory</h3>
+            <h3 className="text-xl font-semibold mb-2">1. Zdrojové soubory (pro tuto lekci)</h3>
             <div className="p-4 border rounded-lg h-full">
-                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".txt,.md,.pdf" />
-                <button onClick={() => fileInputRef.current.click()} disabled={uploading} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-400">{uploading ? 'Nahrávám...' : 'Nahrát soubor'}</button>
-                {fileError && <p className="text-red-500 text-sm mt-2">{fileError}</p>}
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+                <button onClick={() => fileInputRef.current.click()} disabled={uploading} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-400">
+                    {uploading ? 'Nahrávám...' : 'Nahrát soubor'}
+                </button>
                 <ul className="mt-4 space-y-2">
                     {sourceFiles.map(file => (
                         <li key={file.name} className="flex items-center justify-between">
@@ -80,14 +72,6 @@ const SourceFilesManager = ({ lessonId, onFilesChange }) => {
                         </li>
                     ))}
                 </ul>
-                 {unsupportedFiles.length > 0 && (
-                    <div className="mt-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 text-sm">
-                        <p><strong>Upozornění:</strong> Následující soubory mají nepodporovaný formát a budou při generování lekce ignorovány:</p>
-                        <ul className="list-disc list-inside ml-4">
-                            {unsupportedFiles.map(f => <li key={f.name}>{f.name}</li>)}
-                        </ul>
-                    </div>
-                )}
             </div>
         </div>
     );
