@@ -35,7 +35,7 @@ export default function AppRoutes() {
         <Routes>
             <Route path="/login" element={<Navigate to="/" replace />} />
             <Route path="/" element={
-                userData?.role === 'professor'
+                userData?.role?.toLowerCase() === 'professor'
                     ? <Navigate to="/professor/dashboard" replace />
                     : <Navigate to="/student/dashboard" replace />
             } />
