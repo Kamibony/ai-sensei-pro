@@ -5,8 +5,9 @@ import AuthPage from './AuthPage';
 import ProfessorDashboard from './ProfessorDashboard';
 import StudentDashboard from './StudentDashboard';
 import LessonEditor from './LessonEditor';
-import StudentLessonView from './StudentLessonView'; // <- Přidat import
+import StudentLessonView from './StudentLessonView';
 import FullScreenLoader from './FullScreenLoader';
+import Layout from './Layout'; // Import the new Layout component
 
 const AppRoutes = () => {
     const { user, isLoading } = useAuth();
@@ -29,28 +30,30 @@ const AppRoutes = () => {
         <Routes>
             <Route path="/auth" element={!user ? <AuthPage /> : <HomeRedirect />} />
             
-            <Route path="/" element={<HomeRedirect />} />
+            {/* Routes with Layout */}
+            <Route element={<Layout />}>
+                <Route path="/" element={<HomeRedirect />} />
 
-            {/* Professor Routes */}
-            <Route 
-                path="/professor-dashboard" 
-                element={user && user.role !== 'student' ? <ProfessorDashboard /> : <Navigate to="/auth" />} 
-            />
-            <Route 
-                path="/lesson-editor/:lessonId" 
-                element={user && user.role !== 'student' ? <LessonEditor /> : <Navigate to="/auth" />} 
-            />
+                {/* Professor Routes */}
+                <Route
+                    path="/professor-dashboard"
+                    element={user && user.role !== 'student' ? <ProfessorDashboard /> : <Navigate to="/auth" />}
+                />
+                <Route
+                    path="/lesson-editor/:lessonId"
+                    element={user && user.role !== 'student' ? <LessonEditor /> : <Navigate to="/auth" />}
+                />
 
-            {/* Student Routes */}
-            <Route 
-                path="/student-dashboard" 
-                element={user && user.role === 'student' ? <StudentDashboard /> : <Navigate to="/auth" />} 
-            />
-            {/* Nová routa pro zobrazení lekce studentovi */}
-            <Route 
-                path="/lesson/:lessonId" 
-                element={user ? <StudentLessonView /> : <Navigate to="/auth" />}
-            />
+                {/* Student Routes */}
+                <Route
+                    path="/student-dashboard"
+                    element={user && user.role === 'student' ? <StudentDashboard /> : <Navigate to="/auth" />}
+                />
+                <Route
+                    path="/lesson/:lessonId"
+                    element={user ? <StudentLessonView /> : <Navigate to="/auth" />}
+                />
+            </Route>
 
             <Route path="*" element={<HomeRedirect />} />
         </Routes>
