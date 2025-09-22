@@ -1,9 +1,18 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Umožní čtení a zápis pouze přihlášeným uživatelům do jejich vlastních souborů
-    match /sources/{lessonId}/{fileName} {
-      allow read, write: if request.auth != null;
+    // Pravidla pro zdrojové soubory specifické pro lekci
+    // Číst může kdokoliv přihlášený, zapisovat jen vlastník lekce (profesor)
+    match /sources/{lessonId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/temata/$(lessonId)).data.professorId == request.auth.uid;
+    }
+
+    // Pravidla pro globální soubory profesora
+    // Číst může kdokoliv přihlášený, zapisovat jen daný profesor
+    match /global_sources/{professorId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == professorId;
     }
   }
 }
