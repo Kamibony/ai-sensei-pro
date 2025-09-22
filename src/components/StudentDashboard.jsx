@@ -1,41 +1,64 @@
 import React, { useState, useEffect } from 'react';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { collection, query, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase/config.js';
+import toast from 'react-hot-toast';
+import FullScreenLoader from './FullScreenLoader';
 
 const StudentDashboard = () => {
-    const { t } = useTranslation();
-    const navigate = useNavigate();
     const [lessons, setLessons] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        const q = query(collection(db, 'temata'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const lessonsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(lekce => lekce.studentText && lekce.studentText.trim() !== '');
-            setLessons(lessonsData);
-        });
-        return () => unsubscribe();
+        const fetchLessons = async () => {
+            setIsLoading(true);
+            try {
+                // Přidáno řazení, aby byly lekce vždy ve stejném pořadí
+                const q = query(collection(db, 'lessons'), orderBy('createdAt', 'desc'));
+                const querySnapshot = await getDocs(q);
+                const lessonsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setLessons(lessonsData);
+            } catch (error) {
+                console.error("Error fetching lessons: ", error);
+                toast.error("Failed to load lessons.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLessons();
     }, []);
+    
+    // Funkce nyní provede skutečnou navigaci
+    const handleLessonClick = (lessonId) => {
+        navigate(`/lesson/${lessonId}`);
+    };
+
+    if (isLoading) {
+        return <FullScreenLoader />;
+    }
 
     return (
-        <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-gray-700 mb-6">{t('dashboard.availableLessons')}</h2>
-            {lessons.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {lessons.map((lekce) => (
-                        <div key={lekce.id} onClick={() => navigate(`/student/lesson/${lekce.id}`)} className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all">
-                            <h3 className="text-xl font-bold">{lekce.title}</h3>
-                            <p className="text-gray-600 mt-2">{lekce.subtitle}</p>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-16 bg-white rounded-lg shadow-md">
-                    <p>{t('dashboard.noAvailableLessons')}</p>
-                </div>
-            )}
+        <div className="container mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-6">Student Dashboard</h1>
+            <div>
+                <h2 className="text-2xl font-semibold mb-4">Dostupné lekce</h2>
+                {lessons.length > 0 ? (
+                    <ul className="space-y-2">
+                        {lessons.map(lesson => (
+                            <li key={lesson.id} 
+                                className="p-4 border rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                                onClick={() => handleLessonClick(lesson.id)}>
+                                <h3 className="font-bold text-lg">{lesson.title}</h3>
+                                {lesson.subtitle && <p className="text-gray-600">{lesson.subtitle}</p>}
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>Momentálně nejsou k dispozici žádné lekce.</p>
+                )}
+            </div>
         </div>
     );
 };

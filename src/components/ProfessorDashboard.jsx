@@ -1,120 +1,101 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../firebase/config.js';
-import { DndContext, closestCenter } from '@dnd-kit/core';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-
-import LessonLibrary from './Dashboard/LessonLibrary';
-import Timeline from './Dashboard/Timeline';
-import GlobalFilesManager from './Dashboard/GlobalFilesManager';
 import LessonCreationModal from './Dashboard/LessonCreationModal';
+import GlobalFilesManager from './Dashboard/GlobalFilesManager';
+import FullScreenLoader from './FullScreenLoader';
 
 const ProfessorDashboard = () => {
-    const navigate = useNavigate();
     const [lessons, setLessons] = useState([]);
-    const [scheduledLessons, setScheduledLessons] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (!auth.currentUser) return;
-        const q = query(collection(db, 'temata'), where('professorId', '==', auth.currentUser.uid));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setLessons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
-        return () => unsubscribe();
-    }, []);
-    
-    useEffect(() => {
-        if (!auth.currentUser) return;
-        const q = query(collection(db, 'scheduledLessons'), where('professorId', '==', auth.currentUser.uid));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setScheduledLessons(snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                scheduledDate: doc.data().scheduledDate.toDate()
-            })));
-        });
-        return () => unsubscribe();
-    }, []);
-
-    const handleDragEnd = async (event) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-
-        const draggedItemType = active.data.current?.type;
-        const draggedId = active.id;
-        const targetContainerId = over.id;
-
-        const dateStr = targetContainerId.toString();
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const targetDate = new Date(Date.UTC(year, month - 1, day));
-
-        if (draggedItemType === 'scheduled') {
-            if (targetContainerId === 'library') {
-                await deleteDoc(doc(db, 'scheduledLessons', draggedId));
-                toast.success('Naplánovaná lekce byla odstraněna.');
-            } else {
-                const eventRef = doc(db, 'scheduledLessons', draggedId);
-                await updateDoc(eventRef, { scheduledDate: Timestamp.fromDate(targetDate) });
-                toast.success('Lekce přesunuta.');
-            }
-        } else if (draggedItemType === 'library' && targetContainerId !== 'library') {
-            const lessonTemplate = lessons.find(l => l.id === draggedId);
-            await addDoc(collection(db, 'scheduledLessons'), {
-                lessonId: draggedId,
-                title: lessonTemplate.title,
-                subtitle: lessonTemplate.subtitle,
-                professorId: auth.currentUser.uid,
-                scheduledDate: Timestamp.fromDate(targetDate),
-                status: 'Naplánováno'
-            });
-            toast.success('Lekce naplánována.');
+        if (user) {
+            const fetchLessons = async () => {
+                setIsLoading(true);
+                try {
+                    const q = query(
+                        collection(db, 'lessons'), 
+                        where('professorId', '==', user.uid),
+                        orderBy('createdAt', 'desc') // Seřadí od nejnovější po nejstarší
+                    );
+                    const querySnapshot = await getDocs(q);
+                    const lessonsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setLessons(lessonsData);
+                } catch (error) {
+                    console.error("Error fetching lessons: ", error);
+                    toast.error("Failed to load lessons. Check console for details.");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchLessons();
         }
-    };
+    }, [user]);
 
     const handleCreateLesson = async (title, subtitle) => {
-        if (!title.trim()) return;
+        if (!user) return;
+
         try {
-            const newLessonRef = await addDoc(collection(db, 'temata'), {
+            const docRef = await addDoc(collection(db, "lessons"), {
                 title,
                 subtitle,
-                professorId: auth.currentUser.uid,
                 createdAt: serverTimestamp(),
-                studentText: '',
-                videoUrl: '',
-                chatbotPersona: 'Jsi přátelský a nápomocný asistent.',
+                professorId: user.uid,
             });
             setIsModalOpen(false);
-            toast.success('Lekce byla úspěšně vytvořena!');
-            navigate(`/professor/lesson/${newLessonRef.id}`);
+            navigate(`/lesson-editor/${docRef.id}`);
         } catch (error) {
-            toast.error("Nepodařilo se vytvořit lekci.");
+            console.error("Error creating lesson: ", error);
+            toast.error("Failed to create lesson.");
         }
     };
     
+    if (isLoading) {
+        return <FullScreenLoader />;
+    }
+
     return (
-        <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-            <div className="container mx-auto p-4 md:p-8">
-                 <div className="mb-8 p-6 bg-white rounded-xl shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-700 mb-4">Globální soubory kurzu</h2>
-                    <GlobalFilesManager professorId={auth.currentUser?.uid} />
+        <div className="container mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-6">Professor Dashboard</h1>
+            <div className="mb-6">
+                <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Vytvořit novou lekci
+                </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h2 className="text-2xl font-semibold mb-4">Moje lekce</h2>
+                    {lessons.length > 0 ? (
+                         <ul className="space-y-2">
+                            {lessons.map(lesson => (
+                                <li key={lesson.id} className="p-4 border rounded-lg hover:bg-gray-100 cursor-pointer transition-colors" onClick={() => navigate(`/lesson-editor/${lesson.id}`)}>
+                                    <h3 className="font-bold text-lg">{lesson.title}</h3>
+                                    {lesson.subtitle && <p className="text-gray-600">{lesson.subtitle}</p>}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>Zatím nebyly vytvořeny žádné lekce.</p>
+                    )}
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-1">
-                       <LessonLibrary lessons={lessons} onNewLessonClick={() => setIsModalOpen(true)} />
-                    </div>
-                    <div className="lg:col-span-3">
-                        <Timeline scheduledLessons={scheduledLessons} />
-                    </div>
+                <div>
+                    <h2 className="text-2xl font-semibold mb-4">Globální zdrojové soubory</h2>
+                    {user && <GlobalFilesManager professorId={user.uid} />}
                 </div>
             </div>
-            <LessonCreationModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                onCreate={handleCreateLesson} 
+            <LessonCreationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onCreate={handleCreateLesson}
             />
-        </DndContext>
+        </div>
     );
 };
 

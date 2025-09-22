@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { storage } from '../../firebase/config.js';
 import toast from 'react-hot-toast';
 
 const GlobalFilesManager = ({ professorId }) => {
     const [files, setFiles] = useState([]);
-    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const fileInputRef = useRef(null);
 
     const getStoragePath = () => `global_sources/${professorId}`;
@@ -29,21 +29,40 @@ const GlobalFilesManager = ({ professorId }) => {
         fetchFiles();
     }, [fetchFiles]);
 
-    const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file || !professorId) return;
-        setUploading(true);
-        try {
+    const handleFileUpload = (e) => {
+        const files = e.target.files;
+        if (!files || !professorId) return;
+        
+        Array.from(files).forEach(file => {
+            const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!allowedTypes.includes(file.type)) {
+                toast.error(`Nepodporovaný typ souboru: ${file.name}`);
+                return;
+            }
+
             const storageRef = ref(storage, `${getStoragePath()}/${file.name}`);
-            await uploadBytes(storageRef, file);
-            toast.success("Soubor byl úspěšně nahrán!");
-            await fetchFiles();
-        } catch (error) {
-            toast.error('Nahrávání selhalo.');
-        } finally {
-            setUploading(false);
-            if(fileInputRef.current) fileInputRef.current.value = "";
-        }
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setUploadProgress(progress);
+                },
+                (error) => {
+                    toast.error('Nahrávání selhalo.');
+                    setUploadProgress(0);
+                },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then(() => {
+                        toast.success("Soubor byl úspěšně nahrán!");
+                        fetchFiles();
+                        setUploadProgress(0);
+                    });
+                }
+            );
+        });
+
+        if(fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleDeleteFile = async (fileName) => {
@@ -60,10 +79,15 @@ const GlobalFilesManager = ({ professorId }) => {
 
     return (
         <div>
-            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-            <button onClick={() => fileInputRef.current.click()} disabled={uploading} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-400">
-                {uploading ? 'Nahrávám...' : 'Nahrát globální soubor'}
+            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple accept=".pdf,.docx" />
+            <button onClick={() => fileInputRef.current.click()} disabled={uploadProgress > 0} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-400">
+                {uploadProgress > 0 ? `Nahrávám (${Math.round(uploadProgress)}%)` : 'Nahrát globální soubor(y)'}
             </button>
+            {uploadProgress > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+                </div>
+            )}
             <ul className="mt-4 space-y-2">
                 {files.map(file => (
                     <li key={file.name} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">

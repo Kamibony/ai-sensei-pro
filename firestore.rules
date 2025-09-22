@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Povolit čtení a zápis do všech dokumentů pouze přihlášeným uživatelům
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://localhost:5173", "https://ai-sensei-f2e05.web.app"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "responseHeader": ["Content-Type", "Authorization"],
+    "maxAgeSeconds": 3600
+  }
+]

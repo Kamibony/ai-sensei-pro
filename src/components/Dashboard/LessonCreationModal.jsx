@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth'; // 1. Import pro získání uživatele
+import toast from 'react-hot-toast';      // 2. Import pro zobrazení notifikací
 
 const LessonCreationModal = ({ isOpen, onClose, onCreate }) => {
     const [title, setTitle] = useState('');
     const [subtitle, setSubtitle] = useState('');
+    const { user } = useAuth(); // 3. Získání aktuálního uživatele
 
     if (!isOpen) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // 4. KLÍČOVÁ OPRAVA: Kontrola, zda je uživatel přihlášen
+        if (!user) {
+            toast.error("Uživatel není přihlášen. Počkejte prosím a zkuste to znovu.");
+            return; // Zastaví funkci, pokud uživatel není k dispozici
+        }
+        
+        // Pokud je uživatel přihlášen, pokračuje se jako dříve
         onCreate(title, subtitle);
         setTitle('');
         setSubtitle('');

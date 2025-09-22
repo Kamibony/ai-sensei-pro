@@ -3,64 +3,58 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthPage from './AuthPage';
 import ProfessorDashboard from './ProfessorDashboard';
-import ProfessorLessonView from './ProfessorLessonView';
 import StudentDashboard from './StudentDashboard';
-import StudentLessonView from './StudentLessonView';
+import LessonEditor from './LessonEditor';
+import StudentLessonView from './StudentLessonView'; // <- Přidat import
 import FullScreenLoader from './FullScreenLoader';
 
-const ProtectedRoute = ({ children, role, userRole }) => {
-    if (role && role !== userRole) {
-        return <Navigate to="/" replace />;
-    }
-    return children;
-};
+const AppRoutes = () => {
+    const { user, isLoading } = useAuth();
 
-export default function AppRoutes() {
-    const { user, userData, loading } = useAuth();
-
-    if (loading) {
+    if (isLoading) {
         return <FullScreenLoader />;
     }
 
-    if (!user) {
-        return (
-            <Routes>
-                <Route path="/login" element={<AuthPage />} />
-                <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-        );
-    }
+    const HomeRedirect = () => {
+        if (!user) {
+            return <Navigate to="/auth" />;
+        }
+        if (user.role === 'student') {
+            return <Navigate to="/student-dashboard" />;
+        }
+        return <Navigate to="/professor-dashboard" />;
+    };
 
     return (
         <Routes>
-            <Route path="/login" element={<Navigate to="/" replace />} />
-            <Route path="/" element={
-                userData?.role?.toLowerCase() === 'professor'
-                    ? <Navigate to="/professor/dashboard" replace />
-                    : <Navigate to="/student/dashboard" replace />
-            } />
+            <Route path="/auth" element={!user ? <AuthPage /> : <HomeRedirect />} />
+            
+            <Route path="/" element={<HomeRedirect />} />
 
-            <Route path="/professor/dashboard" element={
-                <ProtectedRoute role="professor" userRole={userData?.role}>
-                    <ProfessorDashboard />
-                </ProtectedRoute>
-            } />
-            <Route path="/professor/lesson/:lessonId" element={
-                <ProtectedRoute role="professor" userRole={userData?.role}>
-                    <ProfessorLessonView />
-                </ProtectedRoute>
-            } />
+            {/* Professor Routes */}
+            <Route 
+                path="/professor-dashboard" 
+                element={user && user.role !== 'student' ? <ProfessorDashboard /> : <Navigate to="/auth" />} 
+            />
+            <Route 
+                path="/lesson-editor/:lessonId" 
+                element={user && user.role !== 'student' ? <LessonEditor /> : <Navigate to="/auth" />} 
+            />
 
-            <Route path="/student/dashboard" element={
-                <ProtectedRoute role="student" userRole={userData?.role}>
-                    <StudentDashboard />
-                </ProtectedRoute>
-            } />
-            <Route path="/student/lesson/:lessonId" element={
-                <ProtectedRoute role="student" userRole={userData?.role}>
-                    <StudentLessonView />
-                </ProtectedRoute>
-            } />
+            {/* Student Routes */}
+            <Route 
+                path="/student-dashboard" 
+                element={user && user.role === 'student' ? <StudentDashboard /> : <Navigate to="/auth" />} 
+            />
+            {/* Nová routa pro zobrazení lekce studentovi */}
+            <Route 
+                path="/lesson/:lessonId" 
+                element={user ? <StudentLessonView /> : <Navigate to="/auth" />}
+            />
+
+            <Route path="*" element={<HomeRedirect />} />
         </Routes>
     );
-}
+};
+
+export default AppRoutes;
