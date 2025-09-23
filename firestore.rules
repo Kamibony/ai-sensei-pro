@@ -1,9 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Povolit ƒçten√≠ a z√°pis do v≈°ech dokument≈Ø pouze p≈ôihl√°≈°en√Ωm u≈æivatel≈Øm
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    // UûivatelÈ mohou cÌst a menit pouze sv· vlastnÌ data
+    match /users/{userId} {
+      allow read, update, delete: if request.auth.uid == userId;
+      allow create: if request.auth.uid != null;
+    }
+
+    // Lekce mohou cÌst vöichni prihl·öenÌ uûivatelÈ
+    // Zapisovat mohou pouze profesori
+    match /lessons/{lessonId} {
+       allow read: if request.auth != null;
+       allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'professor';
+    }
+
+    // Pravidla pro gamifikaci
+    match /userPoints/{userId} {
+        allow read: if request.auth.uid == userId;
+        allow write: if false; // Zapisuje pouze backend (Cloud Function)
     }
   }
 }

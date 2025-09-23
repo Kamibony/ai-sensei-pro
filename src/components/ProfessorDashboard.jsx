@@ -1,3 +1,4 @@
+ feature/user-auth-file-management-revised
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -7,14 +8,12 @@ import toast from 'react-hot-toast';
 import LessonCreationModal from './Dashboard/LessonCreationModal';
 import SourceFilesManager from './Dashboard/SourceFilesManager';
 import FullScreenLoader from './FullScreenLoader';
+ main
 
 const ProfessorDashboard = () => {
-    const [lessons, setLessons] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const { user } = useAuth();
-    const navigate = useNavigate();
+  const { t } = useTranslation();
 
+ feature/user-auth-file-management-revised
     useEffect(() => {
         if (user) {
             const fetchLessons = async () => {
@@ -23,7 +22,7 @@ const ProfessorDashboard = () => {
                     const q = query(
                         collection(db, 'lessons'), 
                         where('professorId', '==', user.uid),
-                        orderBy('createdAt', 'desc') // Seřadí od nejnovější po nejstarší
+                        orderBy('createdAt', 'desc') // SeÅ™adÃ­ od nejnovÄ›jÅ¡Ã­ po nejstarÅ¡Ã­
                     );
                     const querySnapshot = await getDocs(q);
                     const lessonsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -66,7 +65,7 @@ const ProfessorDashboard = () => {
             <h1 className="text-3xl font-bold mb-6">Professor Dashboard</h1>
             <div className="mb-6">
                 <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">
-                    Vytvořit novou lekci
+                    VytvoÅ™it novou lekci
                 </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -82,11 +81,11 @@ const ProfessorDashboard = () => {
                             ))}
                         </ul>
                     ) : (
-                        <p>Zatím nebyly vytvořeny žádné lekce.</p>
+                        <p>ZatÃ­m nebyly vytvoÅ™eny Å¾Ã¡dnÃ© lekce.</p>
                     )}
                 </div>
                 <div>
-                    <h2 className="text-2xl font-semibold mb-4">Zdrojové soubory</h2>
+                    <h2 className="text-2xl font-semibold mb-4">ZdrojovÃ© soubory</h2>
                     {user && <SourceFilesManager professorId={user.uid} />}
                 </div>
             </div>
@@ -97,6 +96,7 @@ const ProfessorDashboard = () => {
             />
         </div>
     );
+ main
 };
 
 export default ProfessorDashboard;
