@@ -1,7 +1,7 @@
-﻿# Název workflow
+# Název workflow
 name: Deploy to Firebase Hosting on push
 
-# Spustí se při každém pushi do větve 'main'
+# Spustí se při každém pushi do větve `main`
 on:
   push:
     branches:
@@ -11,13 +11,13 @@ on:
 jobs:
   build_and_deploy:
     # Poběží na nejnovější verzi Ubuntu
-      runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-latest
+
     # Jednotlivé kroky
-      steps:
+    steps:
       # 1. Stáhne kód z repozitáře
-        - name: Checkout repository
-          uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       # 2. Nastaví prostředí Node.js verze 20
       - name: Setup Node.js
@@ -25,8 +25,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      
-      # 3. Nainstaluje závislosti pomocí 'npm ci' (rychlejší a spolehlivější pro CI/CD)
+
+      # 3. Nainstaluje závislosti pomocí `npm ci` (rychlejší a spolehlivější pro CI/CD)
       - name: Install dependencies
         run: npm ci
 
@@ -40,9 +40,7 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
       # 5. Nahraje sestavený web na Firebase Hosting
       - name: Deploy to Firebase Hosting
- 
-        run: npx firebase-tools@latest deploy --only hosting --project ai-sensei-f2e05 --token "${{ secrets.FIREBASE_TOKEN }}"
-
- 
+        run: npx firebase-tools@latest deploy --only hosting --project ai-sensei-f2a05 --token "${{ secrets.FIREBASE_TOKEN }}"
