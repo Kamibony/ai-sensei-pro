@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase/config.js';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../../firebase/config.js';
+import toast from 'react-hot-toast';
 
 const StudentChat = ({ selectedStudent, lessonId }) => {
     const [professorMessage, setProfessorMessage] = useState('');
+    const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -12,22 +14,23 @@ const StudentChat = ({ selectedStudent, lessonId }) => {
 
     const handleProfessorSend = async (e) => {
         e.preventDefault();
-        if (!professorMessage.trim() || !selectedStudent) return;
+        if (!professorMessage.trim() || !selectedStudent || isSending) return;
 
-        const newMessage = {
-            text: professorMessage,
-            sender: 'professor',
-            timestamp: serverTimestamp()
-        };
+        setIsSending(true);
+        const sendMessage = httpsCallable(functions, 'sendMessageToStudent');
 
-        const chatDocRef = doc(db, 'temata', lessonId, 'chats', selectedStudent.studentId);
         try {
-            await updateDoc(chatDocRef, {
-                messages: arrayUnion(newMessage)
+            await sendMessage({
+                studentId: selectedStudent.studentId,
+                lessonId: lessonId,
+                text: professorMessage,
             });
             setProfessorMessage('');
-        } catch (err) {
-            console.error("Error sending message:", err);
+        } catch (error) {
+            console.error("Error sending message:", error);
+            toast.error("Odeslání zprávy selhalo.");
+        } finally {
+            setIsSending(false);
         }
     };
 
