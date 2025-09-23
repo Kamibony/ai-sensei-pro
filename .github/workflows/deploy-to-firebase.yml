@@ -34,11 +34,5 @@ jobs:
 
       # Krok 5: Nahraje sestavený web na Firebase Hosting
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          # Používáme název tajného klíče, který jsi nastavil na GitHubu
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_AI_SENSEI_F2E05 }}'
-          channelId: live
-          projectId: ai-sensei-f2e05
+        run: npx firebase-tools@latest deploy --only hosting --project ai-sensei-f2e05 --token "${{ secrets.FIREBASE_TOKEN }}"
 
