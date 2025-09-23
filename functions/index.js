@@ -1,5 +1,10 @@
 ﻿const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+ feature/user-auth-file-management-revised
+const fetch = require("node-fetch");
+const pdf = require("pdf-parse");
+const mammoth = require("mammoth");
+ main
 
 admin.initializeApp();
 
@@ -261,5 +266,67 @@ exports.sendMessageToStudent = functions.https.onCall(async (data, context) => {
             throw error;
         }
         throw new functions.https.HttpsError("internal", "Došlo k neočekávané chybě.");
+    }
+});
+
+exports.getSourceFileContent = functions.https.onCall(async (data, context) => {
+    // 1. Check for authentication
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            "unauthenticated",
+            "You must be logged in to perform this action."
+        );
+    }
+
+    const { filePath } = data;
+    if (!filePath) {
+        throw new functions.https.HttpsError(
+            "invalid-argument",
+            "The function must be called with a 'filePath' argument."
+        );
+    }
+
+    try {
+        const bucket = admin.storage().bucket();
+        const file = bucket.file(filePath);
+
+        const [fileBuffer] = await file.download();
+        let textContent = "";
+
+        // 2. Extract text based on file type
+        if (filePath.endsWith(".pdf")) {
+            const pdfData = await pdf(fileBuffer);
+            textContent = pdfData.text;
+        } else if (filePath.endsWith(".docx")) {
+            const docxResult = await mammoth.extractRawText({ buffer: fileBuffer });
+            textContent = docxResult.value;
+        } else if (filePath.endsWith(".txt")) {
+            textContent = fileBuffer.toString("utf8");
+        } else {
+            throw new functions.https.HttpsError(
+                "invalid-argument",
+                "Unsupported file type."
+            );
+        }
+
+        if (!textContent) {
+            throw new functions.https.HttpsError(
+                "not-found",
+                "Could not extract text from the file."
+            );
+        }
+
+        // 3. Return the extracted text
+        return { success: true, text: textContent };
+
+    } catch (error) {
+        console.error("Error in getSourceFileContent:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError(
+            "internal",
+            "An unexpected error occurred while processing the file."
+        );
     }
 });

@@ -8,11 +8,11 @@ service firebase.storage {
       allow write: if request.auth != null && get(/databases/$(database)/documents/temata/$(lessonId)).data.professorId == request.auth.uid;
     }
 
-    // Pravidla pro globální soubory profesora
-    // Číst může kdokoliv přihlášený, zapisovat jen daný profesor
-    match /global_sources/{professorId}/{allPaths=**} {
+    // Pravidla pro zdrojové soubory
+    // Číst může kdokoliv přihlášený, zapisovat jen vlastník
+    match /source-files/{userId}/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == professorId;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
