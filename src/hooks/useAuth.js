@@ -1,35 +1,48 @@
-﻿import { useState, useEffect } from 'react';
+﻿import React, { useEffect, useState, createContext, useContext } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '../firebase/config.js'; // Opravená cesta k souboru
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
 
-export const useAuth = () => {
-    const [user, setUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+// Vytvoření kontextu pro sdílení dat o přihlášení
+const AuthContext = createContext();
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Používateľ je prihlásený, ideme zistiť jeho rolu
-                const docRef = doc(db, 'users', user.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    // Pripojíme dáta z databázy (vrátane roly) k objektu používateľa
-                    setUser({ ...user, ...docSnap.data() });
-                } else {
-                    // Ak používateľ nemá záznam v databáze, priradíme mu predvolenú rolu
-                    // alebo ho necháme bez roly, podľa tvojej logiky
-                    console.warn(`User with UID ${user.uid} not found in Firestore.`);
-                    setUser(user);
-                }
-            } else {
-                setUser(null);
-            }
-            setIsLoading(false);
-        });
+// Komponenta "Provider", která bude obalovat celou aplikaci
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
 
-        return () => unsubscribe();
-    }, []);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Uživatel je přihlášen, získáme jeho roli z Firestore
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUserRole(userDoc.data().role); // 'profesor' nebo 'student'
+        }
+        setUser(user);
+      } else {
+        // Uživatel není přihlášen
+        setUser(null);
+        setUserRole(null);
+      }
+      setLoading(false);
+    });
 
-    return { user, isLoading };
+    // Odhlášení listeneru při odmontování komponenty
+    return () => unsubscribe();
+  }, []);
+
+  // Hodnoty, které budou dostupné v celé aplikaci
+  const value = { user, loading, userRole };
+
+  // Následující řádek je přepsán do čistého JS, aby se předešlo chybě s JSX
+  return React.createElement(AuthContext.Provider, { value }, !loading ? children : null);
 };
+
+// Vlastní hook pro snadné použití kontextu v jiných komponentách
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+

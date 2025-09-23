@@ -8,9 +8,9 @@ const StudentChat = ({ selectedStudent, lessonId }) => {
     const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef(null);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [selectedStudent?.messages]);
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
     const handleProfessorSend = async (e) => {
         e.preventDefault();
