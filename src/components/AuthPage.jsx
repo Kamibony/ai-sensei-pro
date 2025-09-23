@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/config.js';
 
 const AuthPage = () => {
@@ -21,7 +21,8 @@ const AuthPage = () => {
                 await setDoc(doc(db, 'users', userCredential.user.uid), {
                     uid: userCredential.user.uid,
                     email: email,
-                    role: role
+                    role: role,
+                    createdAt: serverTimestamp()
                 });
             }
         } catch (err) {

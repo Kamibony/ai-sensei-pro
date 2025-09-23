@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import LessonCreationModal from './Dashboard/LessonCreationModal';
-import GlobalFilesManager from './Dashboard/GlobalFilesManager';
+import SourceFilesManager from './Dashboard/SourceFilesManager';
 import FullScreenLoader from './FullScreenLoader';
 
 const ProfessorDashboard = () => {
@@ -86,8 +86,8 @@ const ProfessorDashboard = () => {
                     )}
                 </div>
                 <div>
-                    <h2 className="text-2xl font-semibold mb-4">Globální zdrojové soubory</h2>
-                    {user && <GlobalFilesManager professorId={user.uid} />}
+                    <h2 className="text-2xl font-semibold mb-4">Zdrojové soubory</h2>
+                    {user && <SourceFilesManager professorId={user.uid} />}
                 </div>
             </div>
             <LessonCreationModal
