@@ -4,14 +4,11 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-// Přejmenováno z generateQuiz na callGeminiAPI, aby odpovídalo importu v komponentě
-export const callGeminiAPI = async (text) => {
-    // Použití zpětných apostrofů (`) pro definici stringu
-    // a vložení proměnné `text` pomocí ${text}
-    const prompt = `Vytvoř kvíz s 5 otázkami a 4 možnostmi odpovědí (z toho jedna správná) na základě následujícího textu. Vrať pouze JSON pole objektů ve formátu [{"question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..."}]. Text: ${text}`;
+export const callGeminiAPI = async (prompt) => {
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    return JSON.parse(response.text());
+    // Předpokládáme, že odpověď je vždy text, který lze přímo použít nebo parsovat v komponentě
+    return response.text();
 };
 
 export const generatePresentation = async (text) => {
