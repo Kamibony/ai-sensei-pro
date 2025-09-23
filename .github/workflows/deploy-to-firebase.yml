@@ -1,38 +1,42 @@
-﻿# Název našeho automatického procesu
+﻿# Název workflow
 name: Deploy to Firebase Hosting on push
 
-# Kdy se má proces spustit: pokaždé, když se něco nahraje do hlavní (main) větve
+# Spustí se při každém pushi do větve 'main'
 on:
   push:
     branches:
       - main
 
-# Co se má přesně stát
+# Definice úkolů (jobs)
 jobs:
   build_and_deploy:
-    # Robot poběží na virtuálním počítači s Ubuntu
+    # Poběží na nejnovější verzi Ubuntu
     runs-on: ubuntu-latest
+    
+    # Jednotlivé kroky
     steps:
-      # Krok 1: Robot si stáhne nejnovější verzi tvého kódu
+      # 1. Stáhne kód z repozitáře
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Krok 2: Nastaví správnou verzi Node.js (použijeme v20)
+      # 2. Nastaví prostředí Node.js verze 20
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
       
-      # Krok 3: Nainstaluje všechny potřebné balíčky (jako 'npm install')
+      # 3. Nainstaluje závislosti pomocí 'npm ci' (rychlejší a spolehlivější pro CI/CD)
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Krok 4: Sestaví finální verzi webu (jako 'npm run build')
+      # 4. Sestaví produkční verzi projektu
       - name: Build project
         run: npm run build
 
-      # Krok 5: Nahraje sestavený web na Firebase Hosting
+      # 5. Nahraje sestavený web na Firebase Hosting
       - name: Deploy to Firebase Hosting
+ fix/firebase-auth
         run: npx firebase-tools@latest deploy --only hosting --project ai-sensei-f2e05 --token "${{ secrets.FIREBASE_TOKEN }}"
 
+ main
