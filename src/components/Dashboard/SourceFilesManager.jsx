@@ -3,12 +3,12 @@ import { ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject } from
 import { storage } from '../../firebase/config.js';
 import toast from 'react-hot-toast';
 
-const GlobalFilesManager = ({ professorId }) => {
+const SourceFilesManager = ({ professorId }) => {
     const [files, setFiles] = useState([]);
     const [uploadProgress, setUploadProgress] = useState(0);
     const fileInputRef = useRef(null);
 
-    const getStoragePath = () => `global_sources/${professorId}`;
+    const getStoragePath = () => `source-files/${professorId}`;
 
     const fetchFiles = useCallback(async () => {
         if (!professorId) return;
@@ -34,7 +34,7 @@ const GlobalFilesManager = ({ professorId }) => {
         if (!files || !professorId) return;
         
         Array.from(files).forEach(file => {
-            const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
             if (!allowedTypes.includes(file.type)) {
                 toast.error(`Nepodporovaný typ souboru: ${file.name}`);
                 return;
@@ -79,7 +79,7 @@ const GlobalFilesManager = ({ professorId }) => {
 
     return (
         <div>
-            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple accept=".pdf,.docx" />
+            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple accept=".pdf,.docx,.txt" />
             <button onClick={() => fileInputRef.current.click()} disabled={uploadProgress > 0} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-400">
                 {uploadProgress > 0 ? `Nahrávám (${Math.round(uploadProgress)}%)` : 'Nahrát globální soubor(y)'}
             </button>
@@ -92,7 +92,12 @@ const GlobalFilesManager = ({ professorId }) => {
                 {files.map(file => (
                     <li key={file.name} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
                         <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate pr-2">{file.name}</a>
-                        <button onClick={() => handleDeleteFile(file.name)} className="text-red-500 hover:text-red-700 font-bold text-lg px-2">&times;</button>
+                        <div className="flex items-center">
+                            <button disabled className="text-sm bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-1 px-2 rounded-lg mr-2">
+                                Použít pro lekci
+                            </button>
+                            <button onClick={() => handleDeleteFile(file.name)} className="text-red-500 hover:text-red-700 font-bold text-lg px-2">&times;</button>
+                        </div>
                     </li>
                 ))}
             </ul>
@@ -100,4 +105,4 @@ const GlobalFilesManager = ({ professorId }) => {
     );
 };
 
-export default GlobalFilesManager;
+export default SourceFilesManager;
