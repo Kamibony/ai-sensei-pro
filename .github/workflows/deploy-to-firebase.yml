@@ -36,10 +36,7 @@ jobs:
 
       # 5. Nahraje sestavený web na Firebase Hosting
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          # Použije servisní účet uložený v GitHub Secrets
-          firebaseServiceAccount: '${{ secrets.FIREBASE_TOKEN }}'
-          channelId: live
-          projectId: ai-sensei-f2e05
+ fix/firebase-auth
+        run: npx firebase-tools@latest deploy --only hosting --project ai-sensei-f2e05 --token "${{ secrets.FIREBASE_TOKEN }}"
+
+ main
