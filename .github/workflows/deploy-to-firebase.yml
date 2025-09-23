@@ -1,36 +1,36 @@
-# Název workflow
+# Workflow name
 name: Deploy to Firebase Hosting on push
 
-# Spustí se při každém pushi do větve `main`
+# Triggers on every push to the `main` branch
 on:
   push:
     branches:
       - main
 
-# Definice úkolů (jobs)
+# Defines the jobs
 jobs:
   build_and_deploy:
-    # Poběží na nejnovější verzi Ubuntu
+    # Runs on the latest Ubuntu version
     runs-on: ubuntu-latest
 
-    # Jednotlivé kroky
+    # Individual steps
     steps:
-      # 1. Stáhne kód z repozitáře
+      # 1. Checks out the repository code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Nastaví prostředí Node.js verze 20
+      # 2. Sets up Node.js environment version 20
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # 3. Nainstaluje závislosti pomocí `npm ci` (rychlejší a spolehlivější pro CI/CD)
+      # 3. Installs dependencies
       - name: Install dependencies
         run: npm ci
 
-      # 4. Sestaví produkční verzi projektu
+      # 4. Builds the production version of the project
       - name: Build project
         run: npm run build
         env:
@@ -41,6 +41,11 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-      # 5. Nahraje sestavený web na Firebase Hosting
+      # 5. Deploys the built web app to Firebase Hosting using the Service Account
       - name: Deploy to Firebase Hosting
-        run: npx firebase-tools@latest deploy --only hosting --project ai-sensei-f2a05 --token "${{ secrets.FIREBASE_TOKEN }}"
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: live
+          projectId: ai-sensei-f2a05
