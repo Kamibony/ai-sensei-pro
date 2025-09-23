@@ -5,8 +5,6 @@ import { db } from '../firebase/config.js';
 import { httpsCallable } from 'firebase/functions';
 import FullScreenLoader from './FullScreenLoader.jsx';
 import TelegramChatView from './TelegramChatView.jsx';
-import toast from 'react-hot-toast';
-
 const StudentLessonView = () => {
     const { lessonId } = useParams();
     const navigate = useNavigate();
@@ -105,9 +103,26 @@ const StudentLessonView = () => {
                                 </button>
                             )}
                         </div>
-                         <div className="w-full max-w-lg mx-auto bg-black rounded-[40px] p-2 shadow-2xl border-4 border-gray-800">
-                             <div className="bg-white rounded-[32px] h-[75vh] flex flex-col overflow-hidden" style={{backgroundImage: "url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')", backgroundSize: 'cover'}}>
-                                {lesson && <TelegramChatView lesson={lesson} lessonId={lessonId} />}
+                        <div className="w-full max-w-lg mx-auto bg-white rounded-xl p-6 shadow-lg">
+                            <h3 className="text-2xl font-bold text-center mb-4">Komunikace přes Telegram</h3>
+                            <p className="text-center text-gray-600 mb-6">
+                                Pro komunikaci s AI asistentem a profesorem použijte prosím chat v aplikaci Telegram.
+                            </p>
+                            <div className="bg-gray-100 p-4 rounded-lg">
+                                <p className="text-center">Otevřete si našeho bota a pošlete mu následující příkaz pro zahájení konverzace k této lekci:</p>
+                                <p className="font-mono bg-gray-200 p-2 rounded mt-2 text-center break-words">
+                                    /start {lessonId}
+                                </p>
+                            </div>
+                            <div className="text-center mt-6">
+                                <a
+                                    href="https://t.me/AI_Sense_FRA_bot"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full inline-block"
+                                >
+                                    Otevřít Telegram
+                                </a>
                             </div>
                         </div>
                     </div>
