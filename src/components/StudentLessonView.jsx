@@ -4,7 +4,6 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 import { httpsCallable } from 'firebase/functions';
 import FullScreenLoader from './FullScreenLoader.jsx';
-import TelegramChatView from './TelegramChatView.jsx';
 const StudentLessonView = () => {
     const { lessonId } = useParams();
     const navigate = useNavigate();

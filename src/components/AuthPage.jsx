@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
- feature/user-auth-file-management-revised
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../firebase/config.js';
- main
+import { db } from '../firebase/config.js';
+import toast from 'react-hot-toast';
+
+// A placeholder for the GoogleIcon component, as its definition is not provided.
+const GoogleIcon = () => (
+    <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48">
+        <path fill="#4285F4" d="M24 9.5c3.23 0 5.45.99 7.18 2.62l5.48-5.48C32.93 2.95 28.88 1 24 1 14.9 1 7.38 6.55 4.24 14.29l6.32 4.88C11.62 13.54 17.38 9.5 24 9.5z"></path>
+        <path fill="#34A853" d="M46.24 25.02c0-1.65-.15-3.25-.42-4.8H24v9.1h12.48c-.54 2.94-2.18 5.43-4.64 7.08l6.13 4.75C42.84 37.1 46.24 31.6 46.24 25.02z"></path>
+        <path fill="#FBBC05" d="M10.56 28.17c-.5-1.48-.78-3.06-.78-4.7s.28-3.22.78-4.7l-6.32-4.88C2.5 17.25 1 20.47 1 24s1.5 6.75 4.24 9.51l6.32-4.84z"></path>
+        <path fill="#EA4335" d="M24 47c4.88 0 8.93-1.95 11.82-5.18l-6.13-4.75c-1.65 1.1-3.75 1.75-6.19 1.75-6.62 0-12.38-4.04-14.44-9.62L4.24 33.71C7.38 41.45 14.9 47 24 47z"></path>
+        <path fill="none" d="M0 0h48v48H0z"></path>
+    </svg>
+);
+
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const auth = getAuth();
 
   const handleAuthAction = async (e) => {
@@ -19,6 +31,7 @@ const AuthPage = () => {
       return;
     }
     setIsLoading(true);
+    setError('');
     try {
       let userCredential;
       if (isLogin) {
@@ -31,12 +44,13 @@ const AuthPage = () => {
         await setDoc(doc(db, "users", user.uid), {
           email: user.email,
           role: 'student',
-          createdAt: new Date(),
+          createdAt: serverTimestamp(),
         });
         toast.success('Registrace byla úspěšná!');
       }
     } catch (error) {
       console.error("Chyba při autentizaci:", error);
+      setError(error.message);
       toast.error(error.message || 'Něco se pokazilo.');
     } finally {
       setIsLoading(false);
@@ -50,30 +64,14 @@ const AuthPage = () => {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
 
- feature/user-auth-file-management-revised
-    const handleAuthAction = async (e) => {
-        e.preventDefault();
-        setError('');
-        try {
-            if (isLogin) {
-                await signInWithEmailAndPassword(auth, email, password);
-            } else {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    uid: userCredential.user.uid,
-                    email: email,
-                    role: role,
-                    createdAt: serverTimestamp()
-                });
-            }
-        } catch (err) {
-            setError(err.message);
- main
-        }
+        // Here you might want to add logic to check if the user exists in your Firestore 'users' collection
+        // and add them if they don't. For now, just show success.
+
         toast.success('Přihlášení přes Google bylo úspěšné!');
 
     } catch (error) {
         console.error("Chyba při přihlášení přes Google:", error);
+        setError(error.message);
         toast.error(error.message || 'Přihlášení přes Google se nezdařilo.');
     } finally {
         setIsLoading(false);
@@ -89,6 +87,8 @@ const AuthPage = () => {
         </h2>
         <p className="text-center text-gray-500 mb-8">Vítejte v AI Sensei!</p>
         
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
         <form onSubmit={handleAuthAction}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
@@ -159,4 +159,3 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
-
