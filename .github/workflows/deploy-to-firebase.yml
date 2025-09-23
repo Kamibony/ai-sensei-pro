@@ -11,13 +11,13 @@ on:
 jobs:
   build_and_deploy:
     # Poběží na nejnovější verzi Ubuntu
-    runs-on: ubuntu-latest
+      runs-on: ubuntu-latest
     
     # Jednotlivé kroky
-    steps:
+      steps:
       # 1. Stáhne kód z repozitáře
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        - name: Checkout repository
+          uses: actions/checkout@v4
 
       # 2. Nastaví prostředí Node.js verze 20
       - name: Setup Node.js
