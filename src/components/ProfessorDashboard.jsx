@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import LessonCreationModal from './Dashboard/LessonCreationModal';
 import SourceFilesManager from './Dashboard/SourceFilesManager';
 import FullScreenLoader from './FullScreenLoader';
-import { useTranslation } from 'react-i18next';
 
 const ProfessorDashboard = () => {
-    const { user } = useAuth();
+    const { user, isLoading: isAuthLoading } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [lessons, setLessons] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const { t } = useTranslation();
 
     useEffect(() => {
         if (user) {
@@ -23,7 +23,7 @@ const ProfessorDashboard = () => {
                 setIsLoading(true);
                 try {
                     const q = query(
-                        collection(db, 'lessons'), 
+                        collection(db, 'lessons'),
                         where('professorId', '==', user.uid),
                         orderBy('createdAt', 'desc')
                     );
@@ -38,8 +38,10 @@ const ProfessorDashboard = () => {
                 }
             };
             fetchLessons();
+        } else if (!isAuthLoading) {
+            setIsLoading(false);
         }
-    }, [user]);
+    }, [user, isAuthLoading]);
 
     const handleCreateLesson = async (title, subtitle) => {
         if (!user) return;
@@ -59,7 +61,7 @@ const ProfessorDashboard = () => {
         }
     };
     
-    if (isLoading) {
+    if (isLoading || isAuthLoading) {
         return <FullScreenLoader />;
     }
 
@@ -84,7 +86,7 @@ const ProfessorDashboard = () => {
                             ))}
                         </ul>
                     ) : (
-                        <p>{t('professorDashboard.noLessons')}</p>
+                        <p>{t('dashboard.noLessonsYet')}</p>
                     )}
                 </div>
                 <div>
