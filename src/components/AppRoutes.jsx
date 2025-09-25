@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import AuthPage from './AuthPage';
 import ProfessorDashboard from './ProfessorDashboard';
 import StudentDashboard from './StudentDashboard';
@@ -10,7 +10,7 @@ import FullScreenLoader from './FullScreenLoader';
 import Layout from './Layout'; // Import the new Layout component
 
 const AppRoutes = () => {
-    const { user, isLoading } = useAuth();
+    const { user, userRole, isLoading } = useAuth();
 
     if (isLoading) {
         return <FullScreenLoader />;
@@ -20,7 +20,7 @@ const AppRoutes = () => {
         if (!user) {
             return <Navigate to="/auth" />;
         }
-        if (user.role === 'student') {
+        if (userRole === 'student') {
             return <Navigate to="/student-dashboard" />;
         }
         return <Navigate to="/professor-dashboard" />;
@@ -37,17 +37,17 @@ const AppRoutes = () => {
                 {/* Professor Routes */}
                 <Route
                     path="/professor-dashboard"
-                    element={user && user.role !== 'student' ? <ProfessorDashboard /> : <Navigate to="/auth" />}
+                    element={user && userRole !== 'student' ? <ProfessorDashboard /> : <Navigate to="/auth" />}
                 />
                 <Route
                     path="/lesson-editor/:lessonId"
-                    element={user && user.role !== 'student' ? <LessonEditor /> : <Navigate to="/auth" />}
+                    element={user && userRole !== 'student' ? <LessonEditor /> : <Navigate to="/auth" />}
                 />
 
                 {/* Student Routes */}
                 <Route
                     path="/student-dashboard"
-                    element={user && user.role === 'student' ? <StudentDashboard /> : <Navigate to="/auth" />}
+                    element={user && userRole === 'student' ? <StudentDashboard /> : <Navigate to="/auth" />}
                 />
                 <Route
                     path="/lesson/:lessonId"
