@@ -1,19 +1,22 @@
- feature/user-auth-file-management-revised
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import LessonCreationModal from './Dashboard/LessonCreationModal';
 import SourceFilesManager from './Dashboard/SourceFilesManager';
 import FullScreenLoader from './FullScreenLoader';
- main
+import { useTranslation } from 'react-i18next';
 
 const ProfessorDashboard = () => {
-  const { t } = useTranslation();
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [lessons, setLessons] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const { t } = useTranslation();
 
- feature/user-auth-file-management-revised
     useEffect(() => {
         if (user) {
             const fetchLessons = async () => {
@@ -22,7 +25,7 @@ const ProfessorDashboard = () => {
                     const q = query(
                         collection(db, 'lessons'), 
                         where('professorId', '==', user.uid),
-                        orderBy('createdAt', 'desc') // SeÅ™adÃ­ od nejnovÄ›jÅ¡Ã­ po nejstarÅ¡Ã­
+                        orderBy('createdAt', 'desc')
                     );
                     const querySnapshot = await getDocs(q);
                     const lessonsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -62,15 +65,15 @@ const ProfessorDashboard = () => {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-6">Professor Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-6">{t('professorDashboard.title')}</h1>
             <div className="mb-6">
                 <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">
-                    VytvoÅ™it novou lekci
+                    {t('professorDashboard.createLesson')}
                 </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h2 className="text-2xl font-semibold mb-4">Moje lekce</h2>
+                    <h2 className="text-2xl font-semibold mb-4">{t('professorDashboard.myLessons')}</h2>
                     {lessons.length > 0 ? (
                          <ul className="space-y-2">
                             {lessons.map(lesson => (
@@ -81,11 +84,11 @@ const ProfessorDashboard = () => {
                             ))}
                         </ul>
                     ) : (
-                        <p>ZatÃ­m nebyly vytvoÅ™eny Å¾Ã¡dnÃ© lekce.</p>
+                        <p>{t('professorDashboard.noLessons')}</p>
                     )}
                 </div>
                 <div>
-                    <h2 className="text-2xl font-semibold mb-4">ZdrojovÃ© soubory</h2>
+                    <h2 className="text-2xl font-semibold mb-4">{t('professorDashboard.sourceFiles')}</h2>
                     {user && <SourceFilesManager professorId={user.uid} />}
                 </div>
             </div>
@@ -96,7 +99,6 @@ const ProfessorDashboard = () => {
             />
         </div>
     );
- main
 };
 
 export default ProfessorDashboard;

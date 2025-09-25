@@ -13,7 +13,9 @@ export const AuthProvider = ({ children }) => {
   const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
+    console.log("AuthProvider: useEffect for auth state is running.");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("AuthProvider: onAuthStateChanged callback fired. User object:", user);
       if (user) {
         // Uživatel je přihlášen, získáme jeho roli z Firestore
         const userDocRef = doc(db, 'users', user.uid);
@@ -28,6 +30,7 @@ export const AuthProvider = ({ children }) => {
         setUserRole(null);
       }
       setLoading(false);
+      console.log("AuthProvider: isLoading state has been set to false.");
     });
 
     // Odhlášení listeneru při odmontování komponenty
@@ -37,8 +40,11 @@ export const AuthProvider = ({ children }) => {
   // Hodnoty, které budou dostupné v celé aplikaci
   const value = { user, loading, userRole };
 
-  // Následující řádek je přepsán do čistého JS, aby se předešlo chybě s JSX
-  return React.createElement(AuthContext.Provider, { value }, !loading ? children : null);
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 // Vlastní hook pro snadné použití kontextu v jiných komponentách
